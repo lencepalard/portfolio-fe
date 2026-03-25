@@ -685,32 +685,97 @@ const ServicesSection = () => {
 
 // ─── PROJECTS ────────────────────────────────────────────────────────────────
 
-const projects = [
+type Project = {
+  media: string;
+  mediaType: "video" | "image";
+  title: string;
+  description: string;
+  tech: string[];
+  badge: string;
+  badgeColor: string;
+  accentColor: string;
+};
+
+const projects: Project[] = [
   {
-    video: "/video/ai-agent-app.mp4",
-    title: "AI Agent Chatbot",
-    description: "An intelligent multi-agent chatbot for enterprises — handles natural language DTR queries, document analysis, and HR workflow automation.",
-    tech: ["Next.js", "TypeScript", "Azure Functions", "MongoDB", "OpenAI"],
-    badge: "AI & Automation",
-    badgeColor: "from-fuchsia-500 to-pink-500",
+    media: "/image/bg-abstract.jpg",
+    mediaType: "image",
+    title: "Smart Appointment System",
+    description:
+      "A web-based appointment booking platform with real-time scheduling, automated email reminders, calendar sync, and an admin dashboard for managing bookings and client records.",
+    tech: ["Next.js", "TypeScript", "MongoDB", "Nodemailer", "FullCalendar"],
+    badge: "Booking System",
+    badgeColor: "from-violet-500 to-fuchsia-500",
+    accentColor: "border-violet-500/40",
   },
   {
-    video: "/video/pos-desktop.mp4",
-    title: "VB.NET Point of Sale System",
-    description: "A desktop POS with inventory tracking, barcode scanning, sales analytics, and cloud sync for small to medium businesses.",
-    tech: ["VB.NET", "MySQL", "WinForms"],
-    badge: "Desktop App",
+    media: "/video/pos-desktop.mp4",
+    mediaType: "video",
+    title: "Restaurant POS System",
+    description:
+      "A modern restaurant point-of-sale with table management, menu ordering, kitchen display, real-time billing, and daily sales reports — built for fast-paced dining environments.",
+    tech: ["React.js", "Node.js", "MySQL", "Socket.io", "WinForms"],
+    badge: "Restaurant POS",
     badgeColor: "from-orange-500 to-amber-500",
+    accentColor: "border-orange-500/40",
   },
   {
-    video: "/videos/owl-hub.mp4",
+    media: "/image/bg-network-eye.jpg",
+    mediaType: "image",
     title: "OWL Hub Management System",
-    description: "Online class enrollment platform with role-based access — Employee, Supervisor, and Admin — for exam approval and grade assignment.",
+    description:
+      "Online class enrollment platform with role-based access — Employee, Supervisor, and Admin — for exam approval, grade assignment, and learning progress tracking.",
     tech: ["React.js", ".NET Core", "SQL Server", "JWT"],
     badge: "Web Platform",
     badgeColor: "from-cyan-500 to-sky-500",
+    accentColor: "border-cyan-500/40",
   },
 ];
+
+const ProjectCard = ({ project, index, inView }: { project: Project; index: number; inView: boolean }) => (
+  <motion.div
+    className={`group rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 overflow-hidden hover:${project.accentColor} transition-all duration-300 hover:-translate-y-1 shadow-sm dark:shadow-none`}
+    initial={{ opacity: 0, y: 30 }}
+    animate={inView ? { opacity: 1, y: 0 } : {}}
+    transition={{ duration: 0.5, delay: index * 0.1 }}
+  >
+    {/* Media */}
+    <div className="relative w-full h-52 overflow-hidden bg-black">
+      {project.mediaType === "video" ? (
+        <video
+          src={project.media}
+          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+          autoPlay loop muted playsInline
+        />
+      ) : (
+        <img
+          src={project.media}
+          alt={project.title}
+          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+        />
+      )}
+      <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
+      <span className={`absolute top-3 left-3 px-3 py-1 rounded-full bg-linear-to-r ${project.badgeColor} text-white text-xs font-semibold shadow-lg`}>
+        {project.badge}
+      </span>
+    </div>
+
+    <div className="p-6">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{project.title}</h3>
+      <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4">{project.description}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {project.tech.map((t) => (
+          <span
+            key={t}
+            className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 text-xs"
+          >
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
+  </motion.div>
+);
 
 const FeaturesSection = () => {
   const ref = useRef(null);
@@ -733,46 +798,13 @@ const FeaturesSection = () => {
             </span>
           </h2>
           <p className="mt-4 text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
-            Real-world applications I&apos;ve built — from AI chatbots to enterprise management systems.
+            Real-world applications I&apos;ve built — from booking systems to enterprise management platforms.
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project, i) => (
-            <motion.div
-              key={i}
-              className="group rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 overflow-hidden hover:border-cyan-400/50 dark:hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-1 shadow-sm dark:shadow-none"
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-            >
-              <div className="relative w-full h-52 overflow-hidden bg-black">
-                <video
-                  src={project.video}
-                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                  autoPlay loop muted playsInline
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-                <span className={`absolute top-3 left-3 px-3 py-1 rounded-full bg-linear-to-r ${project.badgeColor} text-white text-xs font-semibold shadow`}>
-                  {project.badge}
-                </span>
-              </div>
-
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{project.title}</h3>
-                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4">{project.description}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {project.tech.map((t) => (
-                    <span
-                      key={t}
-                      className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 text-xs"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
+            <ProjectCard key={i} project={project} index={i} inView={inView} />
           ))}
         </div>
       </div>
