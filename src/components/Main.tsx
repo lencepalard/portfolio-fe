@@ -792,15 +792,15 @@ const projects: Project[] = [
     accentColor: "border-orange-500/40",
   },
   {
-    media: "/image/bg-network-eye.jpg",
+    media: "/image/bg-code.jpg",
     mediaType: "image",
-    title: "OWL Hub Management System",
+    title: "Employee HRIS Portal",
     description:
-      "Online class enrollment platform with role-based access — Employee, Supervisor, and Admin — for exam approval, grade assignment, and learning progress tracking.",
-    tech: ["React.js", ".NET Core", "SQL Server", "JWT"],
-    badge: "Web Platform",
-    badgeColor: "from-cyan-500 to-sky-500",
-    accentColor: "border-cyan-500/40",
+      "A centralized HR information system for managing employee records, leave requests, payroll summaries, and org charts — with role-based dashboards for HR, managers, and staff.",
+    tech: ["Next.js", "TypeScript", ".NET Core", "SQL Server", "JWT"],
+    badge: "Coming Soon",
+    badgeColor: "from-slate-500 to-gray-600",
+    accentColor: "border-slate-500/40",
   },
 ];
 
