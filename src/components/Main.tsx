@@ -29,7 +29,7 @@ import {
   PackageCheck,
   CloudUpload,
 } from "lucide-react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useSpring } from "framer-motion";
 import Link from "next/link";
 import { FaFacebook, FaGithub, FaLinkedin } from "react-icons/fa";
 
@@ -68,6 +68,105 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 const useTheme = () => useContext(ThemeContext);
+
+// ─── SCROLL ANIMATIONS ───────────────────────────────────────────────────────
+
+// Reusable scroll-reveal wrapper
+type RevealProps = {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  direction?: "up" | "down" | "left" | "right" | "scale" | "none";
+};
+
+const Reveal = ({ children, className = "", delay = 0, direction = "up" }: RevealProps) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  const variants = {
+    hidden: {
+      opacity: 0,
+      y: direction === "up" ? 50 : direction === "down" ? -50 : 0,
+      x: direction === "left" ? 50 : direction === "right" ? -50 : 0,
+      scale: direction === "scale" ? 0.85 : 1,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      x: 0,
+      scale: 1,
+      transition: {
+        duration: 0.7,
+        delay,
+        ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
+      },
+    },
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
+      variants={variants}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Stagger container — children animate one after another
+const StaggerContainer = ({ children, className = "", stagger = 0.1 }: { children: React.ReactNode; className?: string; stagger?: number }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
+      variants={{ visible: { transition: { staggerChildren: stagger } } }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Child item for StaggerContainer
+const StaggerItem = ({ children, className = "", direction = "up" }: { children: React.ReactNode; className?: string; direction?: "up" | "left" | "right" | "scale" }) => (
+  <motion.div
+    className={className}
+    variants={{
+      hidden: {
+        opacity: 0,
+        y: direction === "up" ? 40 : 0,
+        x: direction === "left" ? 40 : direction === "right" ? -40 : 0,
+        scale: direction === "scale" ? 0.9 : 1,
+      },
+      visible: {
+        opacity: 1, y: 0, x: 0, scale: 1,
+        transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+      },
+    }}
+  >
+    {children}
+  </motion.div>
+);
+
+// Scroll progress bar at top of page
+const ScrollProgressBar = () => {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+
+  return (
+    <motion.div
+      className="fixed top-0 left-0 right-0 h-[3px] bg-linear-to-r from-cyan-400 via-violet-500 to-fuchsia-500 origin-left z-[100]"
+      style={{ scaleX }}
+    />
+  );
+};
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -450,19 +549,13 @@ const HeroSection = () => (
 
 const AboutMe = () => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
     <section id="about" ref={ref} className="py-24 lg:py-32 bg-white dark:bg-[#080e1a] transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 lg:px-16 grid md:grid-cols-2 gap-16 items-center">
 
         {/* Photo */}
-        <motion.div
-          className="flex justify-center md:justify-start"
-          initial={{ opacity: 0, x: -40 }}
-          animate={inView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.8 }}
-        >
+        <Reveal direction="right" className="flex justify-center md:justify-start">
           <div className="relative w-72 h-80 sm:w-80 sm:h-96">
             <div className="absolute -top-3 -left-3 w-full h-full border-2 border-cyan-500/30 rounded-3xl" />
             <div className="absolute -bottom-3 -right-3 w-full h-full border-2 border-violet-500/30 rounded-3xl" />
@@ -475,75 +568,76 @@ const AboutMe = () => {
               <div className="absolute inset-0 bg-linear-to-t from-white/60 dark:from-[#080e1a]/60 to-transparent" />
             </div>
           </div>
-        </motion.div>
+        </Reveal>
 
         {/* Content */}
-        <motion.div
-          className="space-y-6"
-          initial={{ opacity: 0, x: 40 }}
-          animate={inView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <SectionLabel>About Me</SectionLabel>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight">
-            Building Digital{" "}
-            <span className="bg-linear-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">
-              Experiences
-            </span>
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-            I&apos;m a Fullstack Web Developer based in the Philippines. I love crafting
-            modern, scalable web applications with clean UI, smooth user experience,
-            and efficient backend logic — helping businesses and people work smarter.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            {[
-              { label: "Name", value: "Lenard Palce" },
-              { label: "Country", value: "Philippines" },
-              { label: "Email", value: "palcelenard@gmail.com" },
-              { label: "Phone", value: "+63 935 253 6315" },
-            ].map((item) => (
-              <div key={item.label} className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-500 dark:text-cyan-400 shrink-0 mt-0.5" />
-                <p className="text-gray-500 dark:text-gray-400">
-                  <span className="text-gray-900 dark:text-white font-semibold">{item.label}: </span>
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Tech badges */}
-          <div className="flex flex-wrap gap-2 pt-2">
-            {["React", "Next.js", "TypeScript", ".NET Core", "MongoDB", "Azure", "Python", "OpenAI"].map((t) => (
-              <span
-                key={t}
-                className="px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-xs font-medium hover:border-cyan-400/50 hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors"
-              >
-                {t}
+        <StaggerContainer className="space-y-6" stagger={0.1}>
+          <StaggerItem><SectionLabel>About Me</SectionLabel></StaggerItem>
+          <StaggerItem>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight">
+              Building Digital{" "}
+              <span className="bg-linear-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">
+                Experiences
               </span>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-4 pt-2">
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors">
-              <FaFacebook className="w-5 h-5" />
-            </a>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors">
-              <FaGithub className="w-5 h-5" />
-            </a>
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors">
-              <FaLinkedin className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              className="ml-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-cyan-500 to-violet-500 text-white text-sm font-semibold hover:brightness-110 transition-all shadow-md shadow-cyan-500/20"
-            >
-              Download CV
-            </a>
-          </div>
-        </motion.div>
+            </h2>
+          </StaggerItem>
+          <StaggerItem>
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+              I&apos;m a Fullstack Web Developer based in the Philippines. I love crafting
+              modern, scalable web applications with clean UI, smooth user experience,
+              and efficient backend logic — helping businesses and people work smarter.
+            </p>
+          </StaggerItem>
+          <StaggerItem>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              {[
+                { label: "Name", value: "Lenard Palce" },
+                { label: "Country", value: "Philippines" },
+                { label: "Email", value: "palcelenard@gmail.com" },
+                { label: "Phone", value: "+63 935 253 6315" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-cyan-500 dark:text-cyan-400 shrink-0 mt-0.5" />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    <span className="text-gray-900 dark:text-white font-semibold">{item.label}: </span>
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </StaggerItem>
+          <StaggerItem>
+            <div className="flex flex-wrap gap-2 pt-2">
+              {["React", "Next.js", "TypeScript", ".NET Core", "MongoDB", "Azure", "Python", "OpenAI"].map((t) => (
+                <span
+                  key={t}
+                  className="px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-xs font-medium hover:border-cyan-400/50 hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          </StaggerItem>
+          <StaggerItem>
+            <div className="flex items-center gap-4 pt-2">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors">
+                <FaFacebook className="w-5 h-5" />
+              </a>
+              <a href="https://github.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors">
+                <FaGithub className="w-5 h-5" />
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors">
+                <FaLinkedin className="w-5 h-5" />
+              </a>
+              <a
+                href="#"
+                className="ml-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-cyan-500 to-violet-500 text-white text-sm font-semibold hover:brightness-110 transition-all shadow-md shadow-cyan-500/20"
+              >
+                Download CV
+              </a>
+            </div>
+          </StaggerItem>
+        </StaggerContainer>
       </div>
     </section>
   );
@@ -598,17 +692,11 @@ const services = [
 
 const ServicesSection = () => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
     <section id="services" ref={ref} className="py-24 lg:py-32 bg-gray-50 dark:bg-[#050b14] transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-        >
+        <Reveal className="text-center mb-16">
           <SectionLabel>What I Can Do For You</SectionLabel>
           <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">
             How I Can{" "}
@@ -620,50 +708,34 @@ const ServicesSection = () => {
             From idea to production — I cover the full development lifecycle so
             your business gets real, working software that grows with you.
           </p>
-        </motion.div>
+        </Reveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" stagger={0.08}>
           {services.map((svc, i) => (
-            <motion.div
-              key={i}
-              className="group relative rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 p-6 hover:border-cyan-400/50 dark:hover:border-cyan-500/40 transition-all duration-300 overflow-hidden shadow-sm dark:shadow-none"
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-            >
-              {/* Hover glow */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                <div className={`absolute -top-8 -right-8 w-40 h-40 rounded-full bg-linear-to-br ${svc.color} opacity-10 dark:opacity-15 blur-2xl`} />
+            <StaggerItem key={i} direction="up">
+              <div className="group relative rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 p-6 hover:border-cyan-400/50 dark:hover:border-cyan-500/40 transition-all duration-300 overflow-hidden shadow-sm dark:shadow-none h-full">
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                  <div className={`absolute -top-8 -right-8 w-40 h-40 rounded-full bg-linear-to-br ${svc.color} opacity-10 dark:opacity-15 blur-2xl`} />
+                </div>
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br ${svc.color} text-white mb-4 shadow-lg`}>
+                  {svc.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{svc.title}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4">{svc.description}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {svc.tags.map((tag) => (
+                    <span key={tag} className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 text-xs">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-
-              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br ${svc.color} text-white mb-4 shadow-lg`}>
-                {svc.icon}
-              </div>
-
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{svc.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4">{svc.description}</p>
-
-              <div className="flex flex-wrap gap-1.5">
-                {svc.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 text-xs"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
 
         {/* CTA bar */}
-        <motion.div
-          className="mt-16 rounded-2xl bg-linear-to-r from-cyan-500/10 to-violet-500/10 border border-gray-200 dark:border-white/10 p-8 flex flex-col md:flex-row items-center justify-between gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.5 }}
-        >
+        <Reveal delay={0.2} className="mt-16 rounded-2xl bg-linear-to-r from-cyan-500/10 to-violet-500/10 border border-gray-200 dark:border-white/10 p-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Have a project in mind?</h3>
             <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
@@ -677,7 +749,7 @@ const ServicesSection = () => {
             Start a Conversation
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </a>
-        </motion.div>
+        </Reveal>
       </div>
     </section>
   );
@@ -732,12 +804,8 @@ const projects: Project[] = [
   },
 ];
 
-const ProjectCard = ({ project, index, inView }: { project: Project; index: number; inView: boolean }) => (
-  <motion.div
-    className={`group rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 overflow-hidden hover:${project.accentColor} transition-all duration-300 hover:-translate-y-1 shadow-sm dark:shadow-none`}
-    initial={{ opacity: 0, y: 30 }}
-    animate={inView ? { opacity: 1, y: 0 } : {}}
-    transition={{ duration: 0.5, delay: index * 0.1 }}
+const ProjectCard = ({ project }: { project: Project }) => (
+  <div className={`group rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 overflow-hidden hover:${project.accentColor} transition-all duration-300 hover:-translate-y-1 shadow-sm dark:shadow-none`}
   >
     {/* Media */}
     <div className="relative w-full h-52 overflow-hidden bg-black">
@@ -774,171 +842,132 @@ const ProjectCard = ({ project, index, inView }: { project: Project; index: numb
         ))}
       </div>
     </div>
-  </motion.div>
+  </div>
 );
 
-const FeaturesSection = () => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+const FeaturesSection = () => (
+  <section id="projects" className="py-24 lg:py-32 bg-white dark:bg-[#080e1a] transition-colors duration-300">
+    <div className="max-w-7xl mx-auto px-6 lg:px-16">
+      <Reveal className="text-center mb-16">
+        <SectionLabel>My Work</SectionLabel>
+        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">
+          Featured{" "}
+          <span className="bg-linear-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">
+            Projects
+          </span>
+        </h2>
+        <p className="mt-4 text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
+          Real-world applications I&apos;ve built — from booking systems to enterprise management platforms.
+        </p>
+      </Reveal>
 
-  return (
-    <section id="projects" ref={ref} className="py-24 lg:py-32 bg-white dark:bg-[#080e1a] transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-        >
-          <SectionLabel>My Work</SectionLabel>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">
-            Featured{" "}
-            <span className="bg-linear-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">
-              Projects
-            </span>
-          </h2>
-          <p className="mt-4 text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
-            Real-world applications I&apos;ve built — from booking systems to enterprise management platforms.
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, i) => (
-            <ProjectCard key={i} project={project} index={i} inView={inView} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
+      <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" stagger={0.12}>
+        {projects.map((project, i) => (
+          <StaggerItem key={i} direction="up">
+            <ProjectCard project={project} />
+          </StaggerItem>
+        ))}
+      </StaggerContainer>
+    </div>
+  </section>
+);
 
 // ─── CONTACT ─────────────────────────────────────────────────────────────────
 
-const ContactSection = () => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+const ContactSection = () => (
+  <section id="contact" className="py-24 lg:py-32 bg-gray-50 dark:bg-[#050b14] relative overflow-hidden transition-colors duration-300">
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-75 bg-linear-to-b from-cyan-500/10 to-transparent blur-3xl pointer-events-none" />
 
-  return (
-    <section id="contact" ref={ref} className="py-24 lg:py-32 bg-gray-50 dark:bg-[#050b14] relative overflow-hidden transition-colors duration-300">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-75 bg-linear-to-b from-cyan-500/10 to-transparent blur-3xl pointer-events-none" />
+    <div className="max-w-7xl mx-auto px-6 lg:px-16">
+      <Reveal className="text-center mb-14">
+        <SectionLabel>Get In Touch</SectionLabel>
+        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">
+          Ready to{" "}
+          <span className="bg-linear-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">
+            Build Together?
+          </span>
+        </h2>
+        <p className="mt-4 text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
+          Whether you have a project idea or just want to chat about tech — my inbox is always open.
+        </p>
+      </Reveal>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <motion.div
-          className="text-center mb-14"
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-        >
-          <SectionLabel>Get In Touch</SectionLabel>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">
-            Ready to{" "}
-            <span className="bg-linear-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">
-              Build Together?
-            </span>
-          </h2>
-          <p className="mt-4 text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
-            Whether you have a project idea or just want to chat about tech — my inbox is always open.
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 gap-10 items-start">
-          {/* Contact info */}
-          <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0, x: -30 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.1 }}
-          >
-            {[
-              { icon: <Mail className="w-5 h-5" />, label: "Email", value: "palcelenard@gmail.com" },
-              { icon: <Phone className="w-5 h-5" />, label: "Phone", value: "+63 935 253 6315" },
-              { icon: <MapPin className="w-5 h-5" />, label: "Location", value: "Philippines" },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center gap-4">
-                <div className="shrink-0 w-12 h-12 rounded-xl bg-linear-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-white shadow-md">
-                  {item.icon}
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-widest">{item.label}</p>
-                  <p className="text-gray-900 dark:text-white font-medium">{item.value}</p>
-                </div>
+      <div className="grid md:grid-cols-2 gap-10 items-start">
+        {/* Contact info */}
+        <Reveal direction="right" className="space-y-6">
+          {[
+            { icon: <Mail className="w-5 h-5" />, label: "Email", value: "palcelenard@gmail.com" },
+            { icon: <Phone className="w-5 h-5" />, label: "Phone", value: "+63 935 253 6315" },
+            { icon: <MapPin className="w-5 h-5" />, label: "Location", value: "Philippines" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-4">
+              <div className="shrink-0 w-12 h-12 rounded-xl bg-linear-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-white shadow-md">
+                {item.icon}
               </div>
-            ))}
-
-            <div className="flex items-center gap-4 pt-4">
-              {[
-                { Icon: FaFacebook, href: "https://facebook.com" },
-                { Icon: FaGithub, href: "https://github.com" },
-                { Icon: FaLinkedin, href: "https://linkedin.com" },
-              ].map(({ Icon, href }) => (
-                <a
-                  key={href}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-10 h-10 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 hover:border-cyan-400/40 transition-colors"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-widest">{item.label}</p>
+                <p className="text-gray-900 dark:text-white font-medium">{item.value}</p>
+              </div>
             </div>
-          </motion.div>
+          ))}
+          <div className="flex items-center gap-4 pt-4">
+            {[
+              { Icon: FaFacebook, href: "https://facebook.com" },
+              { Icon: FaGithub, href: "https://github.com" },
+              { Icon: FaLinkedin, href: "https://linkedin.com" },
+            ].map(({ Icon, href }) => (
+              <a key={href} href={href} target="_blank" rel="noreferrer"
+                className="w-10 h-10 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 hover:border-cyan-400/40 transition-colors">
+                <Icon className="w-4 h-4" />
+              </a>
+            ))}
+          </div>
+        </Reveal>
 
-          {/* Contact form */}
-          <motion.form
+        {/* Contact form */}
+        <Reveal direction="left" delay={0.1}>
+          <form
             className="rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 p-6 sm:p-8 space-y-5 shadow-sm dark:shadow-none"
-            initial={{ opacity: 0, x: 30 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.2 }}
             onSubmit={(e) => e.preventDefault()}
           >
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs text-gray-400 uppercase tracking-widest mb-2">Name</label>
-                <input
-                  type="text"
-                  placeholder="Name"
+                <input type="text" placeholder="Name"
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 text-sm focus:outline-none focus:border-cyan-400 dark:focus:border-cyan-500/50 transition-colors"
                 />
               </div>
               <div>
                 <label className="block text-xs text-gray-400 uppercase tracking-widest mb-2">Email</label>
-                <input
-                  type="email"
-                  placeholder="you@company.com"
+                <input type="email" placeholder="you@company.com"
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 text-sm focus:outline-none focus:border-cyan-400 dark:focus:border-cyan-500/50 transition-colors"
                 />
               </div>
             </div>
             <div>
               <label className="block text-xs text-gray-400 uppercase tracking-widest mb-2">Subject</label>
-              <input
-                type="text"
-                placeholder="Project inquiry"
+              <input type="text" placeholder="Project inquiry"
                 className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 text-sm focus:outline-none focus:border-cyan-400 dark:focus:border-cyan-500/50 transition-colors"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-400 uppercase tracking-widest mb-2">Message</label>
-              <textarea
-                rows={4}
-                placeholder="Tell me about your project..."
+              <textarea rows={4} placeholder="Tell me about your project..."
                 className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 text-sm focus:outline-none focus:border-cyan-400 dark:focus:border-cyan-500/50 transition-colors resize-none"
               />
             </div>
-            <button
-              type="submit"
+            <button type="submit"
               className="w-full py-3 rounded-xl bg-linear-to-r from-cyan-500 to-violet-500 text-white font-semibold hover:brightness-110 transition-all shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 group"
             >
               Send Message
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
-          </motion.form>
-        </div>
+          </form>
+        </Reveal>
       </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
 // ─── DEV PIPELINE ────────────────────────────────────────────────────────────
 
@@ -1218,6 +1247,7 @@ const Footer = () => (
 
 const Index = () => (
   <ThemeProvider>
+    <ScrollProgressBar />
     <div className="min-h-screen bg-gray-50 dark:bg-[#050b14] transition-colors duration-300">
       <Navigation />
       <HeroSection />
