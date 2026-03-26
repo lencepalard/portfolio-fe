@@ -28,6 +28,7 @@ import {
   CheckCheck,
   PackageCheck,
   CloudUpload,
+  ExternalLink,
 } from "lucide-react";
 import { motion, useInView, useScroll, useSpring } from "framer-motion";
 import Link from "next/link";
@@ -766,6 +767,7 @@ type Project = {
   badge: string;
   badgeColor: string;
   accentColor: string;
+  link?: string;
 };
 
 const projects: Project[] = [
@@ -801,12 +803,12 @@ const projects: Project[] = [
     badge: "EdTech · AI",
     badgeColor: "from-blue-500 to-yellow-400",
     accentColor: "border-blue-500/40",
+    link: "https://ako-pinoy-web-git-main-lenard-palces-projects.vercel.app/",
   },
 ];
 
 const ProjectCard = ({ project }: { project: Project }) => (
-  <div className={`group rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 overflow-hidden hover:${project.accentColor} transition-all duration-300 hover:-translate-y-1 shadow-sm dark:shadow-none`}
-  >
+  <div className={`group rounded-2xl bg-white dark:bg-white/3 border border-gray-200 dark:border-white/8 overflow-hidden hover:${project.accentColor} transition-all duration-300 hover:-translate-y-1 shadow-sm dark:shadow-none`}>
     {/* Media */}
     <div className="relative w-full h-52 overflow-hidden bg-black">
       {project.mediaType === "video" ? (
@@ -826,10 +828,34 @@ const ProjectCard = ({ project }: { project: Project }) => (
       <span className={`absolute top-3 left-3 px-3 py-1 rounded-full bg-linear-to-r ${project.badgeColor} text-white text-xs font-semibold shadow-lg`}>
         {project.badge}
       </span>
+      {project.link && (
+        <a
+          href={project.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white/20"
+        >
+          <ExternalLink className="w-3 h-3" />
+          View Live
+        </a>
+      )}
     </div>
 
     <div className="p-6">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{project.title}</h3>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{project.title}</h3>
+        {project.link && (
+          <a
+            href={project.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 text-cyan-500 hover:text-cyan-400 transition-colors"
+            aria-label="Open live site"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
+      </div>
       <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4">{project.description}</p>
       <div className="flex flex-wrap gap-1.5">
         {project.tech.map((t) => (
