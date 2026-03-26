@@ -792,15 +792,15 @@ const projects: Project[] = [
     accentColor: "border-orange-500/40",
   },
   {
-    media: "/image/bg-code.jpg",
+    media: "/image/ako-pinoy.png",
     mediaType: "image",
-    title: "Employee HRIS Portal",
+    title: "Ako Pinoy — Filipino Learning App",
     description:
-      "A centralized HR information system for managing employee records, leave requests, payroll summaries, and org charts — with role-based dashboards for HR, managers, and staff.",
-    tech: ["Next.js", "TypeScript", ".NET Core", "SQL Server", "JWT"],
-    badge: "Coming Soon",
-    badgeColor: "from-slate-500 to-gray-600",
-    accentColor: "border-slate-500/40",
+      "An immersive language learning platform for Tagalog — featuring 1,000+ vocabulary words, 50+ cultural lessons, AI-powered guidance, and real-life Filipino scenarios for foreign learners.",
+    tech: ["Next.js", "TypeScript", "OpenAI", "TailwindCSS", "MongoDB"],
+    badge: "EdTech · AI",
+    badgeColor: "from-blue-500 to-yellow-400",
+    accentColor: "border-blue-500/40",
   },
 ];
 
