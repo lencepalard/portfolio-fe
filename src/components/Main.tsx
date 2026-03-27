@@ -803,7 +803,7 @@ const projects: Project[] = [
     badge: "EdTech · AI",
     badgeColor: "from-blue-500 to-yellow-400",
     accentColor: "border-blue-500/40",
-    link: "https://ako-pinoy-web-git-main-lenard-palces-projects.vercel.app/",
+    link: "https://ako-pinoy-web.vercel.app/",
   },
 ];
 
